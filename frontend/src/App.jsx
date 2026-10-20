@@ -4,6 +4,10 @@ import Dashboard from "./pages/Dashboard";
 import AddTransaction from "./pages/AddTransaction";
 import History from "./pages/History";
 import "./App.css";
+import Signup from "./pages/Signup";
+
+
+
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -34,9 +38,11 @@ function App() {
 
           <div className="nav-right">
             <div className="nav-links">
-              <Link to="/">Dashboard</Link>
-              <Link to="/add-transaction">Add Transaction</Link>
-              <Link to="/history">History</Link>
+            <Link to="/signup">Signup</Link>
+            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/add-transaction">Add Transaction</Link>
+            <Link to="/history">History</Link>
+              
             </div>
 
             {/* Dark Mode Toggle Button */}
@@ -54,11 +60,11 @@ function App() {
         </nav>
 
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route
-            path="/add-transaction"
-            element={<AddTransaction />}
-          />
+          <Route path="/signup" element={<Signup />} />
+           <Route path="/dashboard" element={<Dashboard />} />
+           <Route
+           path="/add-transaction"
+            element={<AddTransaction />}/>
           <Route path="/history" element={<History />} />
         </Routes>
       </div>
