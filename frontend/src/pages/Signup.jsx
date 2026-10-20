@@ -1,92 +1,144 @@
-import { Link } from "react-router-dom";
-import{useNavigate} from "react-router-dom";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-function Signup() {
+function Signup({ onSignupSuccess, darkMode, toggleTheme }) {
   const navigate = useNavigate();
-  const [message, setMessage] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setMessage((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
-  }
+    if (error) setError("");
+  };
 
-  
-   const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      console.log("Submitting signup form with data:", message);
-      const response = await fetch("http://localhost:5000/api/expenses", {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(message),
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
-        console.log("Signup successful:", data);
+        // Save token and user in localStorage
+        localStorage.setItem("expense_token", data.token);
+        localStorage.setItem("expense_user", JSON.stringify(data.user));
+
+        if (onSignupSuccess) {
+          onSignupSuccess(data.user);
+        }
+
         navigate("/dashboard");
       } else {
-        console.error("Signup failed:", data);
+        setError(data.message || "Registration failed. Please try again.");
       }
-    } catch (error) {
-      console.error("Error submitting signup form:", error);
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Cannot connect to server. Please check your backend.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="auth-page">
+      {/* Theme Toggle Button */}
+      {toggleTheme && (
+        <button
+          type="button"
+          className="auth-theme-toggle"
+          onClick={toggleTheme}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label="Toggle theme"
+        >
+          <span>{darkMode ? "☀️" : "🌙"}</span>
+          <span>{darkMode ? "Light" : "Dark"}</span>
+        </button>
+      )}
+
       <div className="auth-card">
         <h1>💰 Expense Tracker</h1>
 
         <h2>Create Account</h2>
-        <p>Start managing your money smarter!</p>
+        <p>Start tracking your expenses and savings</p>
+
+        {error && <div className="auth-alert-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <label>Full Name</label>
+          <label htmlFor="signup-name">Full Name</label>
           <input
+            id="signup-name"
             type="text"
-            placeholder="Enter your full name"
+            placeholder="John Doe"
             required
             name="name"
-            value={message.name}
+            value={formData.name}
             onChange={handleChange}
+            autoComplete="name"
           />
 
-          <label>Email Address</label>
+          <label htmlFor="signup-email">Email Address</label>
           <input
+            id="signup-email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="name@example.com"
             required
             name="email"
-            value={message.email}
+            value={formData.email}
             onChange={handleChange}
+            autoComplete="email"
           />
 
-          <label>Password</label>
+          <label htmlFor="signup-password">Password</label>
           <input
+            id="signup-password"
             type="password"
-            placeholder="Create a password"
+            placeholder="Min. 6 characters"
             required
             name="password"
-            value={message.password}
+            value={formData.password}
             onChange={handleChange}
+            autoComplete="new-password"
+            minLength={6}
           />
 
-          <button type="submit" className="auth-button">
-            Create Account
+          <button
+            type="submit"
+            className="auth-button"
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
         <p className="auth-link">
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account? <Link to="/login">Sign In</Link>
         </p>
       </div>
     </div>
